@@ -1,0 +1,10 @@
+[package]
+name = "botifactory-common"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+reqwest = { version = "0.12.9", features = ["json"] }
+serde = { version = "1.0.215", features = ["derive"] }
+thiserror = "2.0.3"
+url = "2.5.4"
