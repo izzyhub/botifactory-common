@@ -1,9 +1,11 @@
+use bytes::Bytes;
 use serde::{Deserialize, Serialize};
+use std::io::Cursor;
+use std::path::PathBuf;
 use url::Url;
 
 use crate::{
     error::{BotifactoryError, Result},
-    identifier::Identifier,
     util::*,
     ChannelAPI,
 };
@@ -17,6 +19,17 @@ pub struct ReleaseResponse {
     pub updated_at: i64,
 }
 
+pub struct NewRelease {
+    pub version: String,
+    pub path: PathBuf,
+}
+
+impl NewRelease {
+    pub fn new(version: String, path: PathBuf) -> Self {
+        NewRelease { version, path }
+    }
+}
+
 pub struct ReleaseAPI {
     channel: ChannelAPI,
     identifier: Identifier,
@@ -27,6 +40,19 @@ impl ReleaseAPI {
         ReleaseAPI {
             channel,
             identifier,
+        }
+    }
+
+    pub fn get_release_by_name_url(&self) -> Result<Url> {
+        match &self.identifier {
+            Identifier::Name(name) => {
+                let mut url = self.channel.get_channel_url()?;
+                url.path_segments_mut()
+                    .map_err(|_| BotifactoryError::URLPathError)?
+                    .push(name);
+                Ok(url)
+            }
+            Identifier::Id(_) => Err(BotifactoryError::InvalidIdentifier),
         }
     }
 
@@ -45,12 +71,34 @@ impl ReleaseAPI {
         }
     }
 
-    pub async fn get_release_by_id(&self) -> Result<ReleaseResponse> {
-        release_by_url(self.get_release_by_id_url()?).await
+    fn release_url(&self) -> Result<Url> {
+        match self.identifier {
+            Identifier::Id(_) => self.get_release_by_id_url(),
+            Identifier::Name(_) => self.get_release_by_name_url(),
+        }
     }
 
-    pub fn create_release_url(&self) -> Result<Url> {
-        todo!()
+    pub async fn release_info(&self) -> Result<ReleaseResponse> {
+        Ok(reqwest::get(self.release_url()?)
+            .await?
+            .json::<ReleaseResponse>()
+            .await?)
+    }
+
+    pub async fn release_binary(&self) -> Result<Bytes> {
+        Ok(reqwest::get(self.release_url()?).await?.bytes().await?)
+    }
+    pub async fn release_binary_path(&self, path: PathBuf) -> Result<()> {
+        let response = reqwest::get(self.release_url()?).await?;
+
+        let mut file = std::fs::File::create(path)?;
+        let mut content = Cursor::new(response.bytes().await?);
+        std::io::copy(&mut content, &mut file)?;
+        Ok(())
+    }
+
+    pub async fn get_release_by_id(&self) -> Result<ReleaseResponse> {
+        release_by_url(self.get_release_by_id_url()?).await
     }
 }
 
@@ -71,5 +119,21 @@ mod tests {
             .get_release_by_id_url()
             .expect("Expected a valid url");
         assert_eq!("https://botifactory.example.com/release/1", url.to_string());
+    }
+
+    #[test]
+    pub fn test_get_release_by_name_url() {
+        let base_url =
+            Url::parse("https://botifactory.example.com").expect("Expected a valid test url");
+        let botifactory_api = Botifactory::new(base_url, "test-project");
+        let channel = botifactory_api.channel(Identifier::Name("test".to_string()));
+        let release = channel.release(Identifier::Name("latest".to_string()));
+        let url = release
+            .get_release_by_name_url()
+            .expect("Expected a valid url");
+        assert_eq!(
+            "https://botifactory.example.com/test-project/test/latest",
+            url.to_string()
+        );
     }
 }

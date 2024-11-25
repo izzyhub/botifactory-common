@@ -11,6 +11,8 @@ pub enum BotifactoryError {
     URLPathError,
     #[error("Invalid identifier")]
     InvalidIdentifier,
+    #[error("Error reading file")]
+    IOError(#[from] std::io::Error),
 }
 
 pub type Result<T, E = BotifactoryError> = std::result::Result<T, E>;

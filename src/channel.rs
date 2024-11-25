@@ -1,11 +1,11 @@
+use reqwest::multipart;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
 use crate::{
     error::{BotifactoryError, Result},
-    identifier::Identifier,
     util::*,
-    Botifactory, ReleaseAPI, ReleaseResponse,
+    Botifactory, NewRelease, ReleaseAPI, ReleaseResponse,
 };
 
 #[derive(Serialize, Deserialize)]
@@ -46,7 +46,7 @@ impl ChannelAPI {
                 let mut url = self.base.get_project_url()?;
                 url.path_segments_mut()
                     .map_err(|_| BotifactoryError::URLPathError)?
-                    .push(&name);
+                    .push(name);
                 Ok(url)
             }
             Identifier::Id(id) => {
@@ -96,6 +96,29 @@ impl ChannelAPI {
             .map_err(|_| BotifactoryError::URLPathError)?
             .push("new");
         Ok(url)
+    }
+
+    pub async fn new_release(
+        self,
+        new_release: NewRelease,
+    ) -> Result<(ReleaseResponse, ReleaseAPI)> {
+        let url = self.new_release_url()?;
+
+        let form = multipart::Form::new()
+            .part("version", multipart::Part::text(new_release.version))
+            .file("binary", new_release.path)
+            .await?;
+
+        let client = reqwest::Client::new();
+        let create_response = client
+            .post(url)
+            .multipart(form)
+            .send()
+            .await?
+            .json::<ReleaseResponse>()
+            .await?;
+        let identifier = Identifier::Id(create_response.id);
+        Ok((create_response, ReleaseAPI::new(self, identifier)))
     }
 
     pub async fn get_previous_release(&self) -> Result<ReleaseResponse> {

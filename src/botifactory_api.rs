@@ -1,6 +1,6 @@
 use crate::{
     error::{BotifactoryError, Result},
-    identifier::Identifier,
+    util::*,
     ChannelAPI, ChannelJson, CreateChannel, CreateProject, ProjectJson,
 };
 use url::Url;
@@ -24,12 +24,10 @@ impl Botifactory {
 
     fn create_channel_url(&self) -> Result<Url> {
         let mut url = self.get_project_url()?;
-        let mut url_segments = url
-            .path_segments_mut()
-            .map_err(|_| BotifactoryError::URLPathError)?;
-        url_segments.push("channel");
-        url_segments.push("new");
-        drop(url_segments);
+        url.path_segments_mut()
+            .map_err(|_| BotifactoryError::URLPathError)?
+            .push("channel")
+            .push("new");
         Ok(url)
     }
 
