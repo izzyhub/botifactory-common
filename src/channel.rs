@@ -19,7 +19,7 @@ pub struct ChannelJson {
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateChannel {
-    channel_name: String,
+    pub channel_name: String,
 }
 
 impl CreateChannel {

@@ -8,7 +8,7 @@ mod util;
 
 //mod usage_idea;
 
-use botifactory_api::*;
-use channel::*;
-use project::*;
-use release::*;
+pub use botifactory_api::*;
+pub use channel::*;
+pub use project::*;
+pub use release::*;

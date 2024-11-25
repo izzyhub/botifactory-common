@@ -11,7 +11,7 @@ pub struct ProjectJson {
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateProject {
-    name: String,
+    pub name: String,
 }
 
 impl CreateProject {
