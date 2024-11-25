@@ -3,8 +3,9 @@ use url::Url;
 
 use crate::{
     error::{BotifactoryError, Result},
-    identifier::{self, Identifier},
-    Botifactory, ReleaseAPI,
+    identifier::Identifier,
+    util::*,
+    Botifactory, ReleaseAPI, ReleaseResponse,
 };
 
 #[derive(Serialize, Deserialize)]
@@ -68,6 +69,38 @@ impl ChannelAPI {
     pub fn release(self, identifier: Identifier) -> ReleaseAPI {
         ReleaseAPI::new(self, identifier)
     }
+
+    pub fn latest_release_url(&self) -> Result<Url> {
+        let mut url = self.get_channel_url()?;
+        url.path_segments_mut()
+            .map_err(|_| BotifactoryError::URLPathError)?
+            .push("latest");
+        Ok(url)
+    }
+
+    pub async fn get_latest_release(&self) -> Result<ReleaseResponse> {
+        release_by_url(self.latest_release_url()?).await
+    }
+
+    pub fn previous_release_url(&self) -> Result<Url> {
+        let mut url = self.get_channel_url()?;
+        url.path_segments_mut()
+            .map_err(|_| BotifactoryError::URLPathError)?
+            .push("previous");
+        Ok(url)
+    }
+
+    pub fn new_release_url(&self) -> Result<Url> {
+        let mut url = self.get_channel_url()?;
+        url.path_segments_mut()
+            .map_err(|_| BotifactoryError::URLPathError)?
+            .push("new");
+        Ok(url)
+    }
+
+    pub async fn get_previous_release(&self) -> Result<ReleaseResponse> {
+        release_by_url(self.previous_release_url()?).await
+    }
 }
 
 #[cfg(test)]
@@ -87,5 +120,48 @@ mod tests {
             channel_url.to_string(),
             "https://botifactory.example.com/test-project/stable".to_string()
         )
+    }
+
+    #[test]
+    pub fn test_get_latest_release_url() {
+        let base_url =
+            Url::parse("https://botifactory.example.com").expect("Expected a valid test url");
+        let botifactory_api = Botifactory::new(base_url, "test-project");
+        let channel = botifactory_api.channel(Identifier::Name("test".to_string()));
+        let latest_release_url = channel
+            .latest_release_url()
+            .expect("expected to get a valid url");
+        assert_eq!(
+            "https://botifactory.example.com/test-project/test/latest",
+            latest_release_url.to_string()
+        );
+    }
+
+    #[test]
+    pub fn test_get_previous_release_url() {
+        let base_url =
+            Url::parse("https://botifactory.example.com").expect("Expected a valid test url");
+        let botifactory_api = Botifactory::new(base_url, "test-project");
+        let channel = botifactory_api.channel(Identifier::Name("test".to_string()));
+        let latest_release_url = channel
+            .previous_release_url()
+            .expect("expected to get a valid url");
+        assert_eq!(
+            "https://botifactory.example.com/test-project/test/previous",
+            latest_release_url.to_string()
+        );
+    }
+
+    #[test]
+    pub fn test_new_release_url() {
+        let base_url =
+            Url::parse("https://botifactory.example.com").expect("Expected a valid test url");
+        let botifactory_api = Botifactory::new(base_url, "test-project");
+        let channel = botifactory_api.channel(Identifier::Name("test".to_string()));
+        let new_release_url = channel.new_release_url().expect("expected a valid url");
+        assert_eq!(
+            "https://botifactory.example.com/test-project/test/new",
+            new_release_url.to_string()
+        );
     }
 }

@@ -4,6 +4,7 @@ pub mod error;
 pub mod identifier;
 pub mod project;
 pub mod release;
+mod util;
 
 //mod usage_idea;
 
