@@ -16,17 +16,6 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:12
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: postgres
-        ports:
-          - 5432:5432
-    env:
-      SQLX_FEATURES: sqlite
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -45,14 +34,6 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-
-      - name: Install sqlx-cli 
-        uses: baptiste0928/cargo-install@v3
-        with:
-          crate: sqlx-cli
-          args: >
-            --features=${{ env.SQLX_FEATURES }}
-            --no-default-features
       - name: Run cargo test
         run: cargo test
 
@@ -72,16 +53,6 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     services:
-      postgres:
-        image: postgres:12
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: postgres
-        ports:
-          - 5432:5432
-    env:
-      SQLX_FEATURES: sqlite
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -92,20 +63,9 @@ jobs:
           components: clippy
           toolchain: stable
           override: true
-
-      - name: Install sqlx-cli 
-        uses: baptiste0928/cargo-install@v3
+      - uses: auguwu/clippy-action@1.4.0
         with:
-          crate: sqlx-cli
-          args: >
-            --features=${{ env.SQLX_FEATURES }}
-            --no-default-features
-
-      - name: Run clippy
-        uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: -- -D warnings
+          token: ${{secrets.GITHUB_TOKEN}}
 
   coverage:
     name: Code coverage
