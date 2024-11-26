@@ -14,6 +14,6 @@ jobs:
       - name: Setup Rust toolchain with caching
         uses: brndnmtthws/rust-action@v1
         with:
-          cargo-pakages: cargo-bloat
+          cargo-packages: cargo-bloat
       - name: Run cargo bloat
         run: cargo bloat
