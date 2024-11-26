@@ -16,10 +16,5 @@ jobs:
         with:
           cargo-pakages:
             - cargo-bloat
-
-      - name: Install cargo bloat
-        uses: brndnmtthws/rust-action-cargo-binstall@v1
-        with:
-          packages: cargo-bloat
       - name: Run cargo bloat
         run: cargo bloat
