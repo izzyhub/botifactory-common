@@ -120,8 +120,9 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Run cargo-tarpaulin
+      - name: Install cargo-tarpaulin
         uses: brndnmtthws/rust-action-cargo-binstall@v1
         with:
           packages: cargo-tarpaulin sccache
+      - name: Run cargo-tarpaulin
         run: cargo tarpaulin --ignore-tests --avoid-cfg-tarpaulin
