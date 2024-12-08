@@ -11,3 +11,4 @@ pub use botifactory_api::*;
 pub use channel::*;
 pub use project::*;
 pub use release::*;
+pub use util::Identifier;

@@ -1,3 +1,4 @@
+use display_json::DisplayAsJsonPretty;
 use reqwest::multipart;
 use serde::{Deserialize, Serialize};
 use url::Url;
@@ -5,10 +6,16 @@ use url::Url;
 use crate::{
     error::{BotifactoryError, Result},
     util::*,
-    Botifactory, NewRelease, ReleaseAPI, ReleaseResponse,
+    Botifactory, NewRelease, ReleaseAPI, ReleaseBody,
 };
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, DisplayAsJsonPretty)]
+#[serde(rename_all = "camelCase")]
+pub struct ChannelBody {
+    pub channel: ChannelJson,
+}
+
+#[derive(Serialize, Deserialize, DisplayAsJsonPretty)]
 pub struct ChannelJson {
     pub id: i64,
     pub name: String,
@@ -43,9 +50,10 @@ impl ChannelAPI {
     pub fn get_channel_url(&self) -> Result<Url> {
         match &self.identifier {
             Identifier::Name(name) => {
-                let mut url = self.base.get_project_url()?;
+                let mut url = self.base.url.clone();
                 url.path_segments_mut()
                     .map_err(|_| BotifactoryError::URLPathError)?
+                    .push(&self.base.project_name)
                     .push(name);
                 Ok(url)
             }
@@ -59,10 +67,10 @@ impl ChannelAPI {
             }
         }
     }
-    pub async fn get_channel(&self) -> Result<ChannelJson> {
+    pub async fn get_channel(&self) -> Result<ChannelBody> {
         Ok(reqwest::get(self.get_channel_url()?)
             .await?
-            .json::<ChannelJson>()
+            .json::<ChannelBody>()
             .await?)
     }
 
@@ -78,7 +86,7 @@ impl ChannelAPI {
         Ok(url)
     }
 
-    pub async fn get_latest_release(&self) -> Result<ReleaseResponse> {
+    pub async fn get_latest_release(&self) -> Result<ReleaseBody> {
         release_by_url(self.latest_release_url()?).await
     }
 
@@ -98,10 +106,7 @@ impl ChannelAPI {
         Ok(url)
     }
 
-    pub async fn new_release(
-        self,
-        new_release: NewRelease,
-    ) -> Result<(ReleaseResponse, ReleaseAPI)> {
+    pub async fn new_release(self, new_release: NewRelease) -> Result<(ReleaseBody, ReleaseAPI)> {
         let url = self.new_release_url()?;
 
         let form = multipart::Form::new()
@@ -115,13 +120,13 @@ impl ChannelAPI {
             .multipart(form)
             .send()
             .await?
-            .json::<ReleaseResponse>()
+            .json::<ReleaseBody>()
             .await?;
-        let identifier = Identifier::Id(create_response.id);
+        let identifier = Identifier::Id(create_response.release.id);
         Ok((create_response, ReleaseAPI::new(self, identifier)))
     }
 
-    pub async fn get_previous_release(&self) -> Result<ReleaseResponse> {
+    pub async fn get_previous_release(&self) -> Result<ReleaseBody> {
         release_by_url(self.previous_release_url()?).await
     }
 }

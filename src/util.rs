@@ -1,10 +1,11 @@
-use crate::{error::Result, ReleaseResponse};
+use crate::{error::Result, ReleaseBody};
 use url::Url;
 
-pub async fn release_by_url(url: Url) -> Result<ReleaseResponse> {
-    Ok(reqwest::get(url).await?.json::<ReleaseResponse>().await?)
+pub async fn release_by_url(url: Url) -> Result<ReleaseBody> {
+    Ok(reqwest::get(url).await?.json::<ReleaseBody>().await?)
 }
 
+#[derive(Debug)]
 pub enum Identifier {
     Name(String),
     Id(i64),

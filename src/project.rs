@@ -1,11 +1,18 @@
+use display_json::DisplayAsJsonPretty;
 use serde::{Deserialize, Serialize};
+use serde_json;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, DisplayAsJsonPretty)]
 pub struct ProjectJson {
     pub id: i64,
     pub name: String,
     pub created_at: i64,
     pub updated_at: i64,
+}
+
+#[derive(Serialize, Deserialize, DisplayAsJsonPretty)]
+pub struct ProjectBody {
+    pub project: ProjectJson,
 }
 
 #[derive(Serialize, Deserialize)]

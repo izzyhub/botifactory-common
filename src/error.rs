@@ -13,6 +13,8 @@ pub enum BotifactoryError {
     InvalidIdentifier,
     #[error("Error reading file")]
     IOError(#[from] std::io::Error),
+    #[error("Bad header value")]
+    HeaderValue(#[from] reqwest::header::InvalidHeaderValue),
 }
 
 pub type Result<T, E = BotifactoryError> = std::result::Result<T, E>;

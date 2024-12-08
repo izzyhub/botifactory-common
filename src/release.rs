@@ -1,4 +1,6 @@
 use bytes::Bytes;
+use display_json::DisplayAsJsonPretty;
+use reqwest::header::{HeaderMap, ACCEPT};
 use serde::{Deserialize, Serialize};
 use std::io::Cursor;
 use std::path::PathBuf;
@@ -10,13 +12,19 @@ use crate::{
     ChannelAPI,
 };
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, DisplayAsJsonPretty)]
 pub struct ReleaseResponse {
     pub id: i64,
     pub version: String,
     pub hash: Vec<u8>,
     pub created_at: i64,
     pub updated_at: i64,
+}
+
+#[derive(Serialize, Deserialize, DisplayAsJsonPretty)]
+#[serde(rename_all = "camelCase")]
+pub struct ReleaseBody {
+    pub release: ReleaseResponse,
 }
 
 pub struct NewRelease {
@@ -71,22 +79,40 @@ impl ReleaseAPI {
         }
     }
 
-    fn release_url(&self) -> Result<Url> {
+    pub fn release_url(&self) -> Result<Url> {
         match self.identifier {
             Identifier::Id(_) => self.get_release_by_id_url(),
             Identifier::Name(_) => self.get_release_by_name_url(),
         }
     }
 
-    pub async fn release_info(&self) -> Result<ReleaseResponse> {
-        Ok(reqwest::get(self.release_url()?)
+    pub async fn release_info(&self) -> Result<ReleaseBody> {
+        let client = reqwest::Client::new();
+
+        let mut headers = HeaderMap::new();
+        headers.insert(ACCEPT, "application/json".parse()?);
+
+        Ok(client
+            .get(self.release_url()?)
+            .headers(headers)
+            .send()
             .await?
-            .json::<ReleaseResponse>()
+            .json::<ReleaseBody>()
             .await?)
     }
 
     pub async fn release_binary(&self) -> Result<Bytes> {
-        Ok(reqwest::get(self.release_url()?).await?.bytes().await?)
+        let client = reqwest::Client::new();
+        let mut headers = HeaderMap::new();
+        headers.insert(ACCEPT, "application/octet-stream".parse()?);
+
+        Ok(client
+            .get(self.release_url()?)
+            .headers(headers)
+            .send()
+            .await?
+            .bytes()
+            .await?)
     }
     pub async fn release_binary_path(&self, path: PathBuf) -> Result<()> {
         let response = reqwest::get(self.release_url()?).await?;
@@ -97,7 +123,7 @@ impl ReleaseAPI {
         Ok(())
     }
 
-    pub async fn get_release_by_id(&self) -> Result<ReleaseResponse> {
+    pub async fn get_release_by_id(&self) -> Result<ReleaseBody> {
         release_by_url(self.get_release_by_id_url()?).await
     }
 }

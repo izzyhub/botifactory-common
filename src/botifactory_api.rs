@@ -1,7 +1,7 @@
 use crate::{
     error::{BotifactoryError, Result},
     util::*,
-    ChannelAPI, ChannelJson, CreateChannel, CreateProject, ProjectJson,
+    ChannelAPI, ChannelBody, CreateChannel, CreateProject, ProjectBody,
 };
 use url::Url;
 
@@ -18,20 +18,26 @@ impl Botifactory {
         }
     }
 
-    fn new_project_url(&self) -> Result<Url> {
-        Ok(self.url.join("new")?)
-    }
-
-    fn create_channel_url(&self) -> Result<Url> {
-        let mut url = self.get_project_url()?;
+    pub fn new_project_url(&self) -> Result<Url> {
+        let mut url = self.url.clone();
         url.path_segments_mut()
             .map_err(|_| BotifactoryError::URLPathError)?
+            .push("project")
+            .push("new");
+        Ok(url)
+    }
+
+    pub fn create_channel_url(&self) -> Result<Url> {
+        let mut url = self.url.clone();
+        url.path_segments_mut()
+            .map_err(|_| BotifactoryError::URLPathError)?
+            .push(&self.project_name)
             .push("channel")
             .push("new");
         Ok(url)
     }
 
-    pub async fn new_channel(self, channel_name: &str) -> Result<(ChannelJson, ChannelAPI)> {
+    pub async fn new_channel(self, channel_name: &str) -> Result<(ChannelBody, ChannelAPI)> {
         let request_body = CreateChannel::new(channel_name);
         let url = self.create_channel_url()?;
 
@@ -41,14 +47,14 @@ impl Botifactory {
             .json(&request_body)
             .send()
             .await?
-            .json::<ChannelJson>()
+            .json::<ChannelBody>()
             .await?;
 
-        let identifier = Identifier::Id(create_response.id);
+        let identifier = Identifier::Id(create_response.channel.id);
         Ok((create_response, ChannelAPI::new(self, identifier)))
     }
 
-    pub async fn new_project(&self, project_name: &str) -> Result<(ProjectJson, Botifactory)> {
+    pub async fn new_project(&self, project_name: &str) -> Result<(ProjectBody, Botifactory)> {
         let request_body = CreateProject::new(project_name);
 
         let client = reqwest::Client::new();
@@ -58,7 +64,7 @@ impl Botifactory {
             .json(&request_body)
             .send()
             .await?
-            .json::<ProjectJson>()
+            .json::<ProjectBody>()
             .await?;
 
         Ok((
@@ -68,13 +74,18 @@ impl Botifactory {
     }
 
     pub fn get_project_url(&self) -> Result<Url> {
-        Ok(self.url.join(&self.project_name)?)
+        let mut url = self.url.clone();
+        url.path_segments_mut()
+            .map_err(|_| BotifactoryError::URLPathError)?
+            .push("project")
+            .push(&self.project_name);
+        Ok(url)
     }
 
-    pub async fn get_project(&self) -> Result<ProjectJson> {
+    pub async fn get_project(&self) -> Result<ProjectBody> {
         Ok(reqwest::get(self.get_project_url()?)
             .await?
-            .json::<ProjectJson>()
+            .json::<ProjectBody>()
             .await?)
     }
 
@@ -96,7 +107,7 @@ mod tests {
             .expect("Expected to get a valid new project url");
         assert_eq!(
             new_project_url.to_string(),
-            "https://botifactory.example.com/new".to_string()
+            "https://botifactory.example.com/project/new".to_string()
         )
     }
 
@@ -122,7 +133,7 @@ mod tests {
             .expect("Expected to get a valid project url");
         assert_eq!(
             project_url.to_string(),
-            "https://botifactory.example.com/test-project".to_string()
+            "https://botifactory.example.com/project/test-project".to_string()
         )
     }
 }
