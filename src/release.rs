@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::io::Cursor;
 use std::path::PathBuf;
 use url::Url;
+use botifactory_types::ReleaseBody;
 
 use crate::{
     error::{BotifactoryError, Result},
@@ -12,21 +13,8 @@ use crate::{
     ChannelAPI,
 };
 
-#[derive(Serialize, Deserialize, Clone, DisplayAsJsonPretty)]
-pub struct ReleaseResponse {
-    pub id: i64,
-    pub version: String,
-    pub hash: Vec<u8>,
-    pub created_at: i64,
-    pub updated_at: i64,
-}
-
 #[derive(Serialize, Deserialize, DisplayAsJsonPretty)]
 #[serde(rename_all = "camelCase")]
-pub struct ReleaseBody {
-    pub release: ReleaseResponse,
-}
-
 pub struct NewRelease {
     pub version: String,
     pub path: PathBuf,

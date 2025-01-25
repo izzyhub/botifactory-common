@@ -1,4 +1,5 @@
-use crate::{error::Result, ReleaseBody};
+use botifactory_types::ReleaseBody;
+use crate::error::Result;
 use url::Url;
 
 pub async fn release_by_url(url: Url) -> Result<ReleaseBody> {

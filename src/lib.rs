@@ -1,7 +1,6 @@
 pub mod botifactory_api;
 pub mod channel;
 pub mod error;
-pub mod project;
 pub mod release;
 mod util;
 
@@ -9,6 +8,5 @@ mod util;
 
 pub use botifactory_api::*;
 pub use channel::*;
-pub use project::*;
 pub use release::*;
 pub use util::Identifier;

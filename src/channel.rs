@@ -3,10 +3,12 @@ use reqwest::multipart;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
+use botifactory_types::{ReleaseBody};
 use crate::{
     error::{BotifactoryError, Result},
     util::*,
-    Botifactory, NewRelease, ReleaseAPI, ReleaseBody,
+    Botifactory, ReleaseAPI,
+    NewRelease,
 };
 
 #[derive(Serialize, Deserialize, DisplayAsJsonPretty)]
