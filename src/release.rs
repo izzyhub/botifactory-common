@@ -1,3 +1,4 @@
+use botifactory_types::ReleaseBody;
 use bytes::Bytes;
 use display_json::DisplayAsJsonPretty;
 use reqwest::header::{HeaderMap, ACCEPT};
@@ -5,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use std::io::Cursor;
 use std::path::PathBuf;
 use url::Url;
-use botifactory_types::ReleaseBody;
 
 use crate::{
     error::{BotifactoryError, Result},

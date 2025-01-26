@@ -1,9 +1,9 @@
-use botifactory_types::{ChannelBody, CreateChannel, CreateProject, ProjectBody};
 use crate::{
     error::{BotifactoryError, Result},
     util::*,
     ChannelAPI,
 };
+use botifactory_types::{ChannelBody, CreateChannel, CreateProject, ProjectBody};
 use url::Url;
 
 pub struct Botifactory {
