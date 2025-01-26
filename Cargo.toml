@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-botifactory-types = { path = "../botifactory-types" }
-#botifactory-types = { git = "https://github.com/izzyhub/botifactory-types" }
+#botifactory-types = { path = "../botifactory-types" }
+botifactory-types = { git = "https://github.com/izzyhub/botifactory-types" }
 bytes = "1.8.0"
 display_json = "0.2.1"
 reqwest = { version = "0.12.9", features = ["json", "multipart", "stream"] }
