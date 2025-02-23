@@ -15,6 +15,14 @@ pub enum BotifactoryError {
     IOError(#[from] std::io::Error),
     #[error("Bad header value")]
     HeaderValue(#[from] reqwest::header::InvalidHeaderValue),
+    #[error("Heapless error")]
+    HeaplessError,
+}
+
+impl From<()> for BotifactoryError {
+    fn from(_: ()) -> Self {
+        Self::HeaplessError
+    }
 }
 
 pub type Result<T, E = BotifactoryError> = std::result::Result<T, E>;

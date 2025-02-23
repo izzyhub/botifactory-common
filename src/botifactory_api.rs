@@ -39,7 +39,9 @@ impl Botifactory {
     }
 
     pub async fn new_channel(self, channel_name: &str) -> Result<(ChannelBody, ChannelAPI)> {
-        let request_body = CreateChannel::new(channel_name);
+        let request_body = CreateChannel::new(
+            channel_name.to_string(),
+        );
         let url = self.create_channel_url()?;
 
         let client = reqwest::Client::new();
@@ -56,7 +58,9 @@ impl Botifactory {
     }
 
     pub async fn new_project(&self, project_name: &str) -> Result<(ProjectBody, Botifactory)> {
-        let request_body = CreateProject::new(project_name);
+        let request_body = CreateProject::new(
+            project_name.to_string(),
+        );
 
         let client = reqwest::Client::new();
 
